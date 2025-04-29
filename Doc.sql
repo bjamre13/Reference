@@ -18,7 +18,8 @@ CREATE TABLE users (
 
 CREATE TABLE roles (
     role_id SERIAL PRIMARY KEY,
-    name VARCHAR(20) CHECK (name IN ('CUSTOMER', 'AGENT', 'ADMIN')) NOT NULL
+    name VARCHAR(20) CHECK (name IN ('CUSTOMER', 'AGENT', 'ADMIN')) 
+    -- NOT NULL
 );
 
 CREATE TABLE user_role (
