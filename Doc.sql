@@ -8,50 +8,77 @@ USE customer_support_ticket_system;
 // tables
 
 CREATE TABLE users (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(100) NOT NULL UNIQUE,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    user_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE roles (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name ENUM('ADMIN', 'AGENT', 'CUSTOMER') NOT NULL UNIQUE
+    role_id SERIAL PRIMARY KEY,
+    name VARCHAR(20) CHECK (name IN ('CUSTOMER', 'AGENT', 'ADMIN')) NOT NULL
 );
 
-CREATE TABLE user_roles (
-    user_id BIGINT,
-    role_id BIGINT,
-    PRIMARY KEY (user_id, role_id),
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (role_id) REFERENCES roles(id)
+CREATE TABLE user_role (
+    user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
+    role_id INTEGER REFERENCES roles(role_id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, role_id)
 );
 
 CREATE TABLE tickets (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
+    ticket_id SERIAL PRIMARY KEY,
+    customer_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
+    agent_id INTEGER REFERENCES users(user_id),
+    subject VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
-    status ENUM('OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED') DEFAULT 'OPEN',
-    priority ENUM('LOW', 'MEDIUM', 'HIGH') DEFAULT 'MEDIUM',
+    status VARCHAR(20) CHECK (status IN ('OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED')) DEFAULT 'OPEN',
+    priority VARCHAR(20) CHECK (priority IN ('LOW', 'MEDIUM', 'HIGH', 'URGENT')) DEFAULT 'MEDIUM',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    created_by_id BIGINT,
-    assigned_to_id BIGINT,
-    FOREIGN KEY (created_by_id) REFERENCES users(id),
-    FOREIGN KEY (assigned_to_id) REFERENCES users(id)
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE ticket_comments (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE comments (
+    comment_id SERIAL PRIMARY KEY,
+    ticket_id INTEGER REFERENCES tickets(ticket_id) ON DELETE CASCADE,
+    user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
     content TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    user_id BIGINT,
-    ticket_id BIGINT,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (ticket_id) REFERENCES tickets(id)
+    is_internal BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE attachments (
+    attachment_id SERIAL PRIMARY KEY,
+    ticket_id INTEGER REFERENCES tickets(ticket_id) ON DELETE CASCADE,
+    file_path TEXT NOT NULL,
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE notifications (
+    notification_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
+    ticket_id INTEGER REFERENCES tickets(ticket_id) ON DELETE CASCADE,
+    message TEXT NOT NULL,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE ticket_reminders (
+    reminder_id SERIAL PRIMARY KEY,
+    ticket_id INTEGER REFERENCES tickets(ticket_id) ON DELETE CASCADE,
+    reminder_time TIMESTAMP NOT NULL,
+    message TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE feedback (
+    feedback_id SERIAL PRIMARY KEY,
+    ticket_id INTEGER REFERENCES tickets(ticket_id) ON DELETE CASCADE,
+    rating INTEGER CHECK (rating BETWEEN 1 AND 5),
+    comment TEXT,
+    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
 //values
 
