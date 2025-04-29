@@ -1,1 +1,287 @@
+// 1. Entities
 
+@Entity
+@Table(name = "users")
+public class User {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String username;
+    private String email;
+    private String password;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "user_roles",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<Role> roles = new HashSet<>();
+}
+
+@Entity
+@Table(name = "roles")
+public class Role {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Enumerated(EnumType.STRING)
+    private RoleName name;
+}
+
+public enum RoleName {
+    ADMIN, AGENT, CUSTOMER
+}
+
+@Entity
+@Table(name = "tickets")
+public class Ticket {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String title;
+    private String description;
+
+    @Enumerated(EnumType.STRING)
+    private Status status = Status.OPEN;
+
+    @Enumerated(EnumType.STRING)
+    private Priority priority = Priority.MEDIUM;
+
+    @ManyToOne
+    @JoinColumn(name = "created_by_id")
+    private User createdBy;
+
+    @ManyToOne
+    @JoinColumn(name = "assigned_to_id")
+    private User assignedTo;
+}
+
+public enum Status {
+    OPEN, IN_PROGRESS, RESOLVED, CLOSED
+}
+
+public enum Priority {
+    LOW, MEDIUM, HIGH
+}
+
+@Entity
+@Table(name = "ticket_comments")
+public class TicketComment {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String content;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "ticket_id")
+    private Ticket ticket;
+}
+
+
+// 2. Repositories
+
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
+    Optional<User> findByUsername(String username);
+}
+
+@Repository
+public interface RoleRepository extends JpaRepository<Role, Long> {
+    Optional<Role> findByName(RoleName roleName);
+}
+
+@Repository
+public interface TicketRepository extends JpaRepository<Ticket, Long> {
+    List<Ticket> findByCreatedBy(User user);
+}
+
+@Repository
+public interface TicketCommentRepository extends JpaRepository<TicketComment, Long> {}
+
+
+// 3. DTOs
+
+@Data
+public class UserDto {
+    private Long id;
+    private String username;
+    private String email;
+    private Set<String> roles;
+}
+
+@Data
+public class TicketDto {
+    private Long id;
+    private String title;
+    private String description;
+    private String status;
+    private String priority;
+    private Long createdById;
+    private Long assignedToId;
+}
+
+@Data
+public class TicketCommentDto {
+    private Long id;
+    private String content;
+    private Long userId;
+    private Long ticketId;
+}
+
+
+// 4. Mappers
+
+@Component
+public class UserMapper {
+    public UserDto toDto(User user) {
+        UserDto dto = new UserDto();
+        dto.setId(user.getId());
+        dto.setUsername(user.getUsername());
+        dto.setEmail(user.getEmail());
+        dto.setRoles(user.getRoles().stream()
+                        .map(role -> role.getName().name())
+                        .collect(Collectors.toSet()));
+        return dto;
+    }
+}
+
+@Component
+public class TicketMapper {
+    public TicketDto toDto(Ticket ticket) {
+        TicketDto dto = new TicketDto();
+        dto.setId(ticket.getId());
+        dto.setTitle(ticket.getTitle());
+        dto.setDescription(ticket.getDescription());
+        dto.setStatus(ticket.getStatus().name());
+        dto.setPriority(ticket.getPriority().name());
+        dto.setCreatedById(ticket.getCreatedBy() != null ? ticket.getCreatedBy().getId() : null);
+        dto.setAssignedToId(ticket.getAssignedTo() != null ? ticket.getAssignedTo().getId() : null);
+        return dto;
+    }
+}
+
+
+// 5. Services
+
+@Service
+public class UserService {
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    
+    public UserService(UserRepository userRepository, RoleRepository roleRepository) {
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+    }
+
+    public User createUser(String username, String email, String password, Set<RoleName> roles) {
+        User user = new User();
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setPassword(password);
+        
+        Set<Role> roleSet = roles.stream()
+                .map(roleName -> roleRepository.findByName(roleName)
+                        .orElseThrow(() -> new RuntimeException("Role not found: " + roleName)))
+                .collect(Collectors.toSet());
+        
+        user.setRoles(roleSet);
+        return userRepository.save(user);
+    }
+}
+
+@Service
+public class TicketService {
+    private final TicketRepository ticketRepository;
+    private final TicketMapper ticketMapper;
+
+    public TicketService(TicketRepository ticketRepository, TicketMapper ticketMapper) {
+        this.ticketRepository = ticketRepository;
+        this.ticketMapper = ticketMapper;
+    }
+
+    public TicketDto createTicket(TicketDto ticketDto) {
+        Ticket ticket = new Ticket();
+        ticket.setTitle(ticketDto.getTitle());
+        ticket.setDescription(ticketDto.getDescription());
+        ticket.setStatus(Status.valueOf(ticketDto.getStatus()));
+        ticket.setPriority(Priority.valueOf(ticketDto.getPriority()));
+        // setting createdBy and assignedTo can be handled separately
+        Ticket saved = ticketRepository.save(ticket);
+        return ticketMapper.toDto(saved);
+    }
+}
+
+@Service
+public class TicketCommentService {
+    private final TicketCommentRepository commentRepository;
+
+    public TicketCommentService(TicketCommentRepository commentRepository) {
+        this.commentRepository = commentRepository;
+    }
+
+    public TicketComment addComment(TicketComment comment) {
+        return commentRepository.save(comment);
+    }
+}
+
+
+// 6. Controllers
+
+@RestController
+@RequestMapping("/api/users")
+public class UserController {
+    private final UserService userService;
+    private final UserMapper userMapper;
+
+    public UserController(UserService userService, UserMapper userMapper) {
+        this.userService = userService;
+        this.userMapper = userMapper;
+    }
+
+    @PostMapping
+    public ResponseEntity<UserDto> createUser(@RequestBody UserDto userDto) {
+        Set<RoleName> roles = userDto.getRoles().stream()
+                .map(RoleName::valueOf)
+                .collect(Collectors.toSet());
+        
+        User user = userService.createUser(userDto.getUsername(), userDto.getEmail(), userDto.getPassword(), roles);
+        return ResponseEntity.ok(userMapper.toDto(user));
+    }
+}
+
+@RestController
+@RequestMapping("/api/tickets")
+public class TicketController {
+    private final TicketService ticketService;
+
+    public TicketController(TicketService ticketService) {
+        this.ticketService = ticketService;
+    }
+
+    @PostMapping
+    public ResponseEntity<TicketDto> createTicket(@RequestBody TicketDto ticketDto) {
+        TicketDto createdTicket = ticketService.createTicket(ticketDto);
+        return ResponseEntity.ok(createdTicket);
+    }
+}
+
+@RestController
+@RequestMapping("/api/comments")
+public class TicketCommentController {
+    private final TicketCommentService commentService;
+
+    public TicketCommentController(TicketCommentService commentService) {
+        this.commentService = commentService;
+    }
+
+    @PostMapping
+    public ResponseEntity<TicketComment> addComment(@RequestBody TicketComment comment) {
+        TicketComment savedComment = commentService.addComment(comment);
+        return ResponseEntity.ok(savedComment);
+    }
+}
