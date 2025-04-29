@@ -91,28 +91,38 @@ INSERT INTO roles (name) VALUES
 ('CUSTOMER');
 
 -- Insert users
-INSERT INTO users (username, email, password) VALUES 
-('admin_user', 'admin@example.com', 'admin123'),
-('agent_john', 'john.agent@example.com', 'agent123'),
-('customer_mary', 'mary.customer@example.com', 'customer123'),
-('customer_steve', 'steve.customer@example.com', 'customer123');
+INSERT INTO users (name, email, password_hash) VALUES
+('Alice Johnson', 'alice@example.com', 'hashed_password_1'),
+('Bob Smith', 'bob@example.com', 'hashed_password_2'),
+('Clara Davis', 'clara@example.com', 'hashed_password_3');
 
 -- Assign roles to users
-INSERT INTO user_roles (user_id, role_id) VALUES
-(1, 1), -- admin_user -> ADMIN
-(2, 2), -- agent_john -> AGENT
-(3, 3), -- customer_mary -> CUSTOMER
-(4, 3); -- customer_steve -> CUSTOMER
+INSERT INTO user_role (user_id, role_id) VALUES
+(1, 1),  -- Alice is a CUSTOMER
+(2, 2),  -- Bob is an AGENT
+(3, 3),  -- Clara is an ADMIN
+(3, 2);  -- Clara is also an AGENT
 
 -- Insert tickets
-INSERT INTO tickets (title, description, status, priority, created_by_id, assigned_to_id) VALUES 
-('Login issue', 'Cannot log into the account, please assist.', 'OPEN', 'HIGH', 3, 2),
-('Feature request', 'Requesting a new feature to export reports.', 'IN_PROGRESS', 'MEDIUM', 4, 2),
-('Password reset', 'Forgot password, need reset.', 'RESOLVED', 'LOW', 3, 2);
+INSERT INTO tickets (customer_id, agent_id, subject, description, status, priority) VALUES
+(1, 2, 'Login Issue', 'Unable to log into the account.', 'OPEN', 'HIGH'),
+(1, NULL, 'Payment Failure', 'Payment was declined without reason.', 'OPEN', 'MEDIUM');
 
 -- Insert ticket comments
-INSERT INTO ticket_comments (content, user_id, ticket_id) VALUES
-('Looking into the login issue.', 2, 1),
-('Please provide more details about the feature.', 2, 2),
-('Password reset instructions sent.', 2, 3),
-('Thanks for the quick response.', 3, 3);
+INSERT INTO comments (ticket_id, user_id, content, is_internal) VALUES
+(1, 2, 'Investigating the login issue.', TRUE),
+(1, 2, 'We are looking into your issue.', FALSE);
+
+INSERT INTO attachments (ticket_id, file_path) VALUES
+(1, '/uploads/login_error.png'),
+(2, '/uploads/payment_receipt.jpg');
+
+INSERT INTO notifications (user_id, ticket_id, message) VALUES
+(1, 1, 'Your ticket has been assigned to an agent.'),
+(1, 2, 'Your ticket is under review.');
+
+INSERT INTO ticket_reminders (ticket_id, reminder_time, message) VALUES
+(1, NOW() + INTERVAL '1 day', 'Follow up with customer on login issue.');
+
+INSERT INTO feedback (ticket_id, rating, comment) VALUES
+(1, 4, 'Good support, issue resolved quickly.');
