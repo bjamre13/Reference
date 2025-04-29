@@ -51,3 +51,40 @@ CREATE TABLE ticket_comments (
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (ticket_id) REFERENCES tickets(id)
 );
+
+
+//values
+
+
+-- Insert roles
+INSERT INTO roles (name) VALUES 
+('ADMIN'),
+('AGENT'),
+('CUSTOMER');
+
+-- Insert users
+INSERT INTO users (username, email, password) VALUES 
+('admin_user', 'admin@example.com', 'admin123'),
+('agent_john', 'john.agent@example.com', 'agent123'),
+('customer_mary', 'mary.customer@example.com', 'customer123'),
+('customer_steve', 'steve.customer@example.com', 'customer123');
+
+-- Assign roles to users
+INSERT INTO user_roles (user_id, role_id) VALUES
+(1, 1), -- admin_user -> ADMIN
+(2, 2), -- agent_john -> AGENT
+(3, 3), -- customer_mary -> CUSTOMER
+(4, 3); -- customer_steve -> CUSTOMER
+
+-- Insert tickets
+INSERT INTO tickets (title, description, status, priority, created_by_id, assigned_to_id) VALUES 
+('Login issue', 'Cannot log into the account, please assist.', 'OPEN', 'HIGH', 3, 2),
+('Feature request', 'Requesting a new feature to export reports.', 'IN_PROGRESS', 'MEDIUM', 4, 2),
+('Password reset', 'Forgot password, need reset.', 'RESOLVED', 'LOW', 3, 2);
+
+-- Insert ticket comments
+INSERT INTO ticket_comments (content, user_id, ticket_id) VALUES
+('Looking into the login issue.', 2, 1),
+('Please provide more details about the feature.', 2, 2),
+('Password reset instructions sent.', 2, 3),
+('Thanks for the quick response.', 3, 3);
