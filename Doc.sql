@@ -9,7 +9,7 @@ USE customer_support_ticket_system;
 
 -- USER TABLE
 CREATE TABLE users (
-    user_id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
@@ -19,8 +19,8 @@ CREATE TABLE users (
 
 -- ROLE TABLE
 CREATE TABLE roles (
-    role_id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(50) CHECK (name IN ('CUSTOMER', 'AGENT', 'ADMIN')) NOT NULL
+    role_id BIGINT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL CHECK (name IN ('CUSTOMER', 'AGENT', 'ADMIN'))
 );
 
 -- USER_ROLE JOIN TABLE
@@ -32,20 +32,20 @@ CREATE TABLE user_role (
 
 -- TICKET TABLE
 CREATE TABLE tickets (
-    ticket_id BIGSERIAL PRIMARY KEY,
+    ticket_id BIGINT PRIMARY KEY,
     customer_id BIGINT REFERENCES users(user_id) ON DELETE SET NULL,
     agent_id BIGINT REFERENCES users(user_id) ON DELETE SET NULL,
     subject VARCHAR(255) NOT NULL,
     description TEXT,
-    status VARCHAR(50) CHECK (status IN ('OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED')) NOT NULL,
-    priority VARCHAR(50) CHECK (priority IN ('LOW', 'MEDIUM', 'HIGH', 'URGENT')) NOT NULL,
+    status VARCHAR(50) NOT NULL CHECK (status IN ('OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED')),
+    priority VARCHAR(50) NOT NULL CHECK (priority IN ('LOW', 'MEDIUM', 'HIGH', 'URGENT')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- COMMENT TABLE
 CREATE TABLE comments (
-    comment_id BIGSERIAL PRIMARY KEY,
+    comment_id BIGINT PRIMARY KEY,
     ticket_id BIGINT REFERENCES tickets(ticket_id) ON DELETE CASCADE,
     user_id BIGINT REFERENCES users(user_id) ON DELETE CASCADE,
     content TEXT NOT NULL,
@@ -55,7 +55,7 @@ CREATE TABLE comments (
 
 -- ATTACHMENT TABLE
 CREATE TABLE attachments (
-    attachment_id BIGSERIAL PRIMARY KEY,
+    attachment_id BIGINT PRIMARY KEY,
     ticket_id BIGINT REFERENCES tickets(ticket_id) ON DELETE CASCADE,
     file_path TEXT NOT NULL,
     uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -63,7 +63,7 @@ CREATE TABLE attachments (
 
 -- NOTIFICATION TABLE
 CREATE TABLE notifications (
-    notification_id BIGSERIAL PRIMARY KEY,
+    notification_id BIGINT PRIMARY KEY,
     user_id BIGINT REFERENCES users(user_id) ON DELETE CASCADE,
     ticket_id BIGINT REFERENCES tickets(ticket_id) ON DELETE CASCADE,
     message TEXT NOT NULL,
@@ -73,7 +73,7 @@ CREATE TABLE notifications (
 
 -- TICKET REMINDER TABLE
 CREATE TABLE ticket_reminders (
-    reminder_id BIGSERIAL PRIMARY KEY,
+    reminder_id BIGINT PRIMARY KEY,
     ticket_id BIGINT REFERENCES tickets(ticket_id) ON DELETE CASCADE,
     reminder_time TIMESTAMP NOT NULL,
     message TEXT,
@@ -82,7 +82,7 @@ CREATE TABLE ticket_reminders (
 
 -- FEEDBACK TABLE
 CREATE TABLE feedback (
-    feedback_id BIGSERIAL PRIMARY KEY,
+    feedback_id BIGINT PRIMARY KEY,
     ticket_id BIGINT UNIQUE REFERENCES tickets(ticket_id) ON DELETE CASCADE,
     rating INTEGER CHECK (rating BETWEEN 1 AND 5),
     comment TEXT,
