@@ -99,6 +99,78 @@ public class TicketComment {
     private Ticket ticket;
 }
 
+@Entity
+public class Comment {
+    @Id @GeneratedValue
+    private Long commentId;
+
+    @ManyToOne
+    private Ticket ticket;
+
+    @ManyToOne
+    private User user;
+
+    private String content;
+    private boolean isInternal;
+    private LocalDateTime createdAt;
+}
+
+@Entity
+public class Attachment {
+    @Id @GeneratedValue
+    private Long attachmentId;
+
+    @ManyToOne
+    private Ticket ticket;
+
+    private String filePath;
+    private LocalDateTime uploadedAt;
+}
+
+
+@Entity
+public class Notification {
+    @Id @GeneratedValue
+    private Long notificationId;
+
+    @ManyToOne
+    private User user;
+
+    @ManyToOne
+    private Ticket ticket;
+
+    private String message;
+    private boolean isRead;
+    private LocalDateTime createdAt;
+}
+
+@Entity
+public class TicketReminder {
+    @Id @GeneratedValue
+    private Long reminderId;
+
+    @ManyToOne
+    private Ticket ticket;
+
+    private LocalDateTime reminderTime;
+    private String message;
+    private LocalDateTime createdAt;
+}
+
+@Entity
+public class Feedback {
+    @Id @GeneratedValue
+    private Long feedbackId;
+
+    @OneToOne
+    private Ticket ticket;
+
+    private int rating;
+    private String comment;
+    private LocalDateTime submittedAt;
+}
+
+
 
 // 2. Repositories
 
@@ -148,6 +220,47 @@ public class TicketCommentDto {
     private String content;
     private Long userId;
     private Long ticketId;
+}
+
+public class CommentDTO {
+    private Long commentId;
+    private Long ticketId;
+    private Long userId;
+    private String content;
+    private boolean isInternal;
+    private LocalDateTime createdAt;
+}
+
+public class AttachmentDTO {
+    private Long attachmentId;
+    private Long ticketId;
+    private String filePath;
+    private LocalDateTime uploadedAt;
+}
+
+public class NotificationDTO {
+    private Long notificationId;
+    private Long userId;
+    private Long ticketId;
+    private String message;
+    private boolean isRead;
+    private LocalDateTime createdAt;
+}
+
+public class TicketReminderDTO {
+    private Long reminderId;
+    private Long ticketId;
+    private LocalDateTime reminderTime;
+    private String message;
+    private LocalDateTime createdAt;
+}
+
+public class FeedbackDTO {
+    private Long feedbackId;
+    private Long ticketId;
+    private int rating;
+    private String comment;
+    private LocalDateTime submittedAt;
 }
 
 
