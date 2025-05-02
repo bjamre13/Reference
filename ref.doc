@@ -440,6 +440,116 @@ public List<NotificationDTO> getUnreadNotifications(Long userId) {
 
 // 6. Controllers
 
+// PACKAGE: controller
+
+package com.example.supportticket.controller;
+
+import com.example.supportticket.dto.; import com.example.supportticket.entity.; import com.example.supportticket.service.; import org.springframework.beans.factory.annotation.Autowired; import org.springframework.http.ResponseEntity; import org.springframework.web.bind.annotation.;
+
+import java.util.List;
+
+@RestController @RequestMapping("/api/users") public class UserController {
+
+@Autowired
+private UserService userService;
+
+@PostMapping("/signup")
+public ResponseEntity<UserDto> register(@RequestBody UserSignupRequest request) {
+    return ResponseEntity.ok(userService.registerUser(request));
+}
+
+@GetMapping("/{id}")
+public ResponseEntity<UserDto> getUser(@PathVariable Long id) {
+    return ResponseEntity.ok(userService.getUserById(id));
+}
+
+}
+
+@RestController @RequestMapping("/api/tickets") public class TicketController {
+
+@Autowired
+private TicketService ticketService;
+
+@PostMapping("/")
+public ResponseEntity<TicketDto> createTicket(@RequestBody TicketDto ticketDto) {
+    return ResponseEntity.ok(ticketService.createTicket(ticketDto));
+}
+
+@GetMapping("/{id}")
+public ResponseEntity<TicketDto> getTicket(@PathVariable Long id) {
+    return ResponseEntity.ok(ticketService.getTicketById(id));
+}
+
+@PutMapping("/{id}")
+public ResponseEntity<TicketDto> updateTicket(@PathVariable Long id, @RequestBody TicketDto ticketDto) {
+    return ResponseEntity.ok(ticketService.updateTicket(id, ticketDto));
+}
+
+@GetMapping("/user/{userId}")
+public ResponseEntity<List<TicketDto>> getTicketsByUser(@PathVariable Long userId) {
+    return ResponseEntity.ok(ticketService.getTicketsByUser(userId));
+}
+
+}
+
+@RestController @RequestMapping("/api/comments") public class CommentController {
+
+@Autowired
+private CommentService commentService;
+
+@PostMapping("/")
+public ResponseEntity<CommentDto> addComment(@RequestBody CommentDto commentDto) {
+    return ResponseEntity.ok(commentService.addComment(commentDto));
+}
+
+@GetMapping("/ticket/{ticketId}")
+public ResponseEntity<List<CommentDto>> getCommentsByTicket(@PathVariable Long ticketId) {
+    return ResponseEntity.ok(commentService.getCommentsByTicket(ticketId));
+}
+
+}
+
+@RestController @RequestMapping("/api/feedback") public class FeedbackController {
+
+@Autowired
+private FeedbackService feedbackService;
+
+@PostMapping("/")
+public ResponseEntity<FeedbackDto> submitFeedback(@RequestBody FeedbackDto feedbackDto) {
+    return ResponseEntity.ok(feedbackService.submitFeedback(feedbackDto));
+}
+
+@GetMapping("/ticket/{ticketId}")
+public ResponseEntity<List<FeedbackDto>> getFeedbackByTicket(@PathVariable Long ticketId) {
+    return ResponseEntity.ok(feedbackService.getFeedbackByTicket(ticketId));
+}
+
+}
+
+@RestController @RequestMapping("/api/notifications") public class NotificationController {
+
+@Autowired
+private NotificationService notificationService;
+
+@GetMapping("/user/{userId}")
+public ResponseEntity<List<NotificationDto>> getNotificationsByUser(@PathVariable Long userId) {
+    return ResponseEntity.ok(notificationService.getNotificationsByUser(userId));
+}
+
+}
+
+@RestController @RequestMapping("/api/roles") public class RoleController {
+
+@Autowired
+private RoleService roleService;
+
+@GetMapping("/")
+public ResponseEntity<List<RoleDto>> getAllRoles() {
+    return ResponseEntity.ok(roleService.getAllRoles());
+}
+
+}
+
 
 
 
