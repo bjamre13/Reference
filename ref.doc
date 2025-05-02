@@ -396,6 +396,27 @@ public void updateStatus(Long ticketId, TicketStatus status) {
     ticketRepository.save(ticket);
 }
 
+public TicketDTO getTicketById(Long id) {
+    Ticket ticket = ticketRepository.findById(id)
+        .orElseThrow(() -> new ResourceNotFoundException("Ticket not found with ID: " + id));
+    return ticketMapper.toDTO(ticket);
+}
+
+public TicketDTO updateTicket(Long id, TicketDTO ticketDTO) {
+    Ticket ticket = ticketRepository.findById(id)
+        .orElseThrow(() -> new ResourceNotFoundException("Ticket not found with ID: " + id));
+
+    // Update mutable fields
+    ticket.setSubject(ticketDTO.getSubject());
+    ticket.setDescription(ticketDTO.getDescription());
+    ticket.setStatus(ticketDTO.getStatus());
+    ticket.setPriority(ticketDTO.getPriority());
+    ticket.setAgent(userRepository.findById(ticketDTO.getAgentId()).orElse(null)); // Nullable
+
+    Ticket updatedTicket = ticketRepository.save(ticket);
+    return ticketMapper.toDTO(updatedTicket);
+}
+
 }
 
 @Service public class CommentService { @Autowired private CommentRepository commentRepository; @Autowired private TicketRepository ticketRepository; @Autowired private UserRepository userRepository;
@@ -407,6 +428,30 @@ public Comment addComment(CommentDTO dto, Long ticketId, Long userId) {
     return commentRepository.save(comment);
 }
 
+public CommentDTO addComment(CommentDTO commentDto) {
+    Ticket ticket = ticketRepository.findById(commentDto.getTicketId())
+        .orElseThrow(() -> new ResourceNotFoundException("Ticket not found with ID: " + commentDto.getTicketId()));
+
+    User author = userRepository.findById(commentDto.getAuthorId())
+        .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + commentDto.getAuthorId()));
+
+    Comment comment = new Comment();
+    comment.setTicket(ticket);
+    comment.setAuthor(author);
+    comment.setMessage(commentDto.getMessage());
+    comment.setCreatedAt(LocalDateTime.now());
+
+    Comment saved = commentRepository.save(comment);
+    return commentMapper.toDTO(saved);
+}
+
+public List<CommentDTO> getCommentsByTicket(Long ticketId) {
+    List<Comment> comments = commentRepository.findByTicketIdOrderByCreatedAtAsc(ticketId);
+    return comments.stream()
+        .map(commentMapper::toDTO)
+        .collect(Collectors.toList());
+}
+
 }
 
 @Service public class FeedbackService { @Autowired private FeedbackRepository feedbackRepository; @Autowired private TicketRepository ticketRepository; @Autowired private UserRepository userRepository;
@@ -416,6 +461,31 @@ public Feedback submitFeedback(FeedbackDTO dto, Long ticketId, Long userId) {
     User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
     Feedback feedback = FeedbackMapper.toEntity(dto, ticket, user);
     return feedbackRepository.save(feedback);
+}
+
+public FeedbackDTO submitFeedback(FeedbackDTO feedbackDto) {
+    Ticket ticket = ticketRepository.findById(feedbackDto.getTicketId())
+        .orElseThrow(() -> new ResourceNotFoundException("Ticket not found with ID: " + feedbackDto.getTicketId()));
+
+    User author = userRepository.findById(feedbackDto.getUserId())
+        .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + feedbackDto.getUserId()));
+
+    Feedback feedback = new Feedback();
+    feedback.setTicket(ticket);
+    feedback.setUser(author);
+    feedback.setMessage(feedbackDto.getMessage());
+    feedback.setRating(feedbackDto.getRating());
+    feedback.setCreatedAt(LocalDateTime.now());
+
+    Feedback saved = feedbackRepository.save(feedback);
+    return feedbackMapper.toDTO(saved);
+}
+
+public List<FeedbackDTO> getFeedbackByTicket(Long ticketId) {
+    List<Feedback> feedbackList = feedbackRepository.findByTicketIdOrderByCreatedAtDesc(ticketId);
+    return feedbackList.stream()
+        .map(feedbackMapper::toDTO)
+        .collect(Collectors.toList());
 }
 
 }
@@ -435,6 +505,23 @@ public List<NotificationDTO> getUnreadNotifications(Long userId) {
             .map(NotificationMapper::toDTO).collect(Collectors.toList());
 }
 
+public List<NotificationDTO> getNotificationsByUser(Long userId) {
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
+
+    List<Notification> notifications = notificationRepository.findByUserOrderByCreatedAtDesc(user);
+    return notifications.stream()
+        .map(notificationMapper::toDTO)
+        .collect(Collectors.toList());
+}
+
+}
+
+public List<RoleDTO> getAllRoles() {
+    List<Role> roles = roleRepository.findAll();
+    return roles.stream()
+        .map(roleMapper::toDTO)
+        .collect(Collectors.toList());
 }
 
 
