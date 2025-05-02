@@ -331,105 +331,6 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
 }
 
 
-
-
-/*********************************************************************************
-// 4. Mappers
-
-@Component
-public class UserMapper {
-    public UserDto toDto(User user) {
-        UserDto dto = new UserDto();
-        dto.setId(user.getId());
-        dto.setUsername(user.getUsername());
-        dto.setEmail(user.getEmail());
-        dto.setRoles(user.getRoles().stream()
-                        .map(role -> role.getName().name())
-                        .collect(Collectors.toSet()));
-        return dto;
-    }
-}
-
-@Component
-public class TicketMapper {
-    public TicketDto toDto(Ticket ticket) {
-        TicketDto dto = new TicketDto();
-        dto.setId(ticket.getId());
-        dto.setTitle(ticket.getTitle());
-        dto.setDescription(ticket.getDescription());
-        dto.setStatus(ticket.getStatus().name());
-        dto.setPriority(ticket.getPriority().name());
-        dto.setCreatedById(ticket.getCreatedBy() != null ? ticket.getCreatedBy().getId() : null);
-        dto.setAssignedToId(ticket.getAssignedTo() != null ? ticket.getAssignedTo().getId() : null);
-        return dto;
-    }
-}
-
-
-// 5. Services
-
-@Service
-public class UserService {
-    private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
-    
-    public UserService(UserRepository userRepository, RoleRepository roleRepository) {
-        this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
-    }
-
-    public User createUser(String username, String email, String password, Set<RoleName> roles) {
-        User user = new User();
-        user.setUsername(username);
-        user.setEmail(email);
-        user.setPassword(password);
-        
-        Set<Role> roleSet = roles.stream()
-                .map(roleName -> roleRepository.findByName(roleName)
-                        .orElseThrow(() -> new RuntimeException("Role not found: " + roleName)))
-                .collect(Collectors.toSet());
-        
-        user.setRoles(roleSet);
-        return userRepository.save(user);
-    }
-}
-
-@Service
-public class TicketService {
-    private final TicketRepository ticketRepository;
-    private final TicketMapper ticketMapper;
-
-    public TicketService(TicketRepository ticketRepository, TicketMapper ticketMapper) {
-        this.ticketRepository = ticketRepository;
-        this.ticketMapper = ticketMapper;
-    }
-
-    public TicketDto createTicket(TicketDto ticketDto) {
-        Ticket ticket = new Ticket();
-        ticket.setTitle(ticketDto.getTitle());
-        ticket.setDescription(ticketDto.getDescription());
-        ticket.setStatus(Status.valueOf(ticketDto.getStatus()));
-        ticket.setPriority(Priority.valueOf(ticketDto.getPriority()));
-        // setting createdBy and assignedTo can be handled separately
-        Ticket saved = ticketRepository.save(ticket);
-        return ticketMapper.toDto(saved);
-    }
-}
-
-@Service
-public class TicketCommentService {
-    private final TicketCommentRepository commentRepository;
-
-    public TicketCommentService(TicketCommentRepository commentRepository) {
-        this.commentRepository = commentRepository;
-    }
-
-    public TicketComment addComment(TicketComment comment) {
-        return commentRepository.save(comment);
-    }
-}********************************************************************************/
-
-
 // PACKAGE: exception
 
 public class ResourceNotFoundException extends RuntimeException { public ResourceNotFoundException(String message) { super(message); } }
@@ -448,11 +349,6 @@ public class FeedbackMapper { public static FeedbackDTO toDTO(Feedback feedback)
 
 public class NotificationMapper { public static NotificationDTO toDTO(Notification n) { return new NotificationDTO(n.getNotificationId(), n.getMessage(), n.isRead(), n.getTimestamp()); } public static Notification toEntity(NotificationDTO dto, User user, Ticket ticket) { return new Notification(null, user, ticket, dto.getMessage(), dto.isRead(), LocalDateTime.now()); } }
 
-// PACKAGE: utility
-
-public class PasswordUtil { public static String hashPassword(String plainPassword) { return BCrypt.hashpw(plainPassword, BCrypt.gensalt()); } public static boolean checkPassword(String plainPassword, String hashed) { return BCrypt.checkpw(plainPassword, hashed); } }
-
-public class EmailUtil { public static void sendEmail(String to, String subject, String body) { // Dummy email sending logic (use JavaMailSender in real app) System.out.println("Sending email to " + to); } }
 
 // PACKAGE: service
 
@@ -544,76 +440,14 @@ public List<NotificationDTO> getUnreadNotifications(Long userId) {
 
 // 6. Controllers
 
-@RestController
-@RequestMapping("/api/users")
-public class UserController {
-    private final UserService userService;
-    private final UserMapper userMapper;
-
-    public UserController(UserService userService, UserMapper userMapper) {
-        this.userService = userService;
-        this.userMapper = userMapper;
-    }
-
-    @PostMapping
-    public ResponseEntity<UserDto> createUser(@RequestBody UserDto userDto) {
-        Set<RoleName> roles = userDto.getRoles().stream()
-                .map(RoleName::valueOf)
-                .collect(Collectors.toSet());
-        
-        User user = userService.createUser(userDto.getUsername(), userDto.getEmail(), userDto.getPassword(), roles);
-        return ResponseEntity.ok(userMapper.toDto(user));
-    }
-}
-
-@RestController
-@RequestMapping("/api/tickets")
-public class TicketController {
-    private final TicketService ticketService;
-
-    public TicketController(TicketService ticketService) {
-        this.ticketService = ticketService;
-    }
-
-    @PostMapping
-    public ResponseEntity<TicketDto> createTicket(@RequestBody TicketDto ticketDto) {
-        TicketDto createdTicket = ticketService.createTicket(ticketDto);
-        return ResponseEntity.ok(createdTicket);
-    }
-}
-
-@RestController
-@RequestMapping("/api/comments")
-public class TicketCommentController {
-    private final TicketCommentService commentService;
-
-    public TicketCommentController(TicketCommentService commentService) {
-        this.commentService = commentService;
-    }
-
-    @PostMapping
-    public ResponseEntity<TicketComment> addComment(@RequestBody TicketComment comment) {
-        TicketComment savedComment = commentService.addComment(comment);
-        return ResponseEntity.ok(savedComment);
-    }
-}
 
 
-// ModelMapperConfig.java
-package com.example.customersupportticket.util;
 
-import org.modelmapper.ModelMapper;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+// PACKAGE: utility
 
-@Configuration
-public class ModelMapperConfig {
+public class PasswordUtil { public static String hashPassword(String plainPassword) { return BCrypt.hashpw(plainPassword, BCrypt.gensalt()); } public static boolean checkPassword(String plainPassword, String hashed) { return BCrypt.checkpw(plainPassword, hashed); } }
 
-    @Bean
-    public ModelMapper modelMapper() {
-        return new ModelMapper();
-    }
-}
+public class EmailUtil { public static void sendEmail(String to, String subject, String body) { // Dummy email sending logic (use JavaMailSender in real app) System.out.println("Sending email to " + to); } }
 
 // ResourceNotFoundException.java
 package com.example.customersupportticket.exception;
