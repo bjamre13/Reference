@@ -517,12 +517,15 @@ public List<NotificationDTO> getNotificationsByUser(Long userId) {
 
 }
 
-public List<RoleDTO> getAllRoles() {
-    List<Role> roles = roleRepository.findAll();
-    return roles.stream()
-        .map(roleMapper::toDTO)
-        .collect(Collectors.toList());
+public class RoleService {
+	public List<RoleDTO> getAllRoles() {
+	    List<Role> roles = roleRepository.findAll();
+	    return roles.stream()
+	        .map(roleMapper::toDTO)
+	        .toList();
+	}
 }
+
 
 
 // 6. Controllers
