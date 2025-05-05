@@ -1,11 +1,12 @@
+-- DataBase Schema Creation
 
-// database creation
+DROP SCHEMA IF EXISTS customer_support_ticket_system;
 
-CREATE DATABASE customer_support_ticket_system;
+CREATE SCHEMA customer_support_ticket_system;
 USE customer_support_ticket_system;
 
 
-// tables
+-- TABLES Creation
 
 -- USER TABLE
 CREATE TABLE users (
@@ -89,8 +90,8 @@ CREATE TABLE feedback (
     submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
-// Values
+ 
+-- VALUES
 
 INSERT INTO roles (role_id, name) VALUES 
 (1, 'CUSTOMER'),
@@ -102,35 +103,40 @@ INSERT INTO users (user_id, name, email, password_hash) VALUES
 (1002, 'Bob Smith', 'bob@example.com', 'hashed_password_2'),
 (1003, 'Charlie Admin', 'charlie@example.com', 'hashed_password_3');
 
-
 INSERT INTO user_role (user_id, role_id) VALUES
 (1001, 1), -- Alice is a CUSTOMER
 (1002, 2), -- Bob is an AGENT
 (1003, 3); -- Charlie is an ADMIN
 
-
 INSERT INTO tickets (ticket_id, customer_id, agent_id, subject, description, status, priority) VALUES
 (5001, 1001, 1002, 'Cannot access account', 'I forgot my password and cannot reset.', 'OPEN', 'HIGH'),
 (5002, 1001, NULL, 'Feature request', 'Add dark mode to dashboard.', 'OPEN', 'LOW');
-
 
 INSERT INTO comments (comment_id, ticket_id, user_id, content, is_internal) VALUES
 (7001, 5001, 1002, 'Working on resetting your password.', TRUE),
 (7002, 5001, 1001, 'Thanks for the quick reply!', FALSE);
 
-
 INSERT INTO attachments (attachment_id, ticket_id, file_path) VALUES
 (8001, 5001, '/uploads/screenshots/error_5001.png');
-
 
 INSERT INTO notifications (notification_id, user_id, ticket_id, message) VALUES
 (9001, 1001, 5001, 'Your ticket has been assigned to an agent.'),
 (9002, 1002, 5001, 'You have been assigned a new ticket.');
 
-
 INSERT INTO ticket_reminders (reminder_id, ticket_id, reminder_time, message) VALUES
 (6001, 5001, NOW() + INTERVAL 1 day, 'Follow up with the customer on password reset.');
 
-
 INSERT INTO feedback (feedback_id, ticket_id, rating, comment) VALUES
 (3001, 5001, 5, 'Great support, fast and helpful!');
+
+-- SELECT 
+
+select * from users;
+select * from tickets;
+select * from user_role;
+select * from ticket_reminders;
+select * from roles;
+select * from feedback;
+select * from comment;
+select * from notifications;
+select * from attachments;
