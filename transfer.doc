@@ -1,1 +1,26 @@
 //
+public class CommentMapper {
+    public static CommentDTO toDTO(Comment comment) {
+        Long ticketId = comment.getTicket() != null ? comment.getTicket().getTicketId() : null;
+        Long userId = comment.getUser() != null ? comment.getUser().getUserId() : null;
+
+        return new CommentDTO(
+            comment.getCommentId(),
+            ticketId,
+            userId,
+            comment.getContent(),
+            comment.isInternal()
+        );
+    }
+
+    public static Comment toEntity(CommentDTO dto, User user, Ticket ticket) {
+        return new Comment(
+            null,
+            ticket,
+            user,
+            dto.getContent(),
+            dto.isInternal(),
+            LocalDateTime.now()
+        );
+    }
+}
