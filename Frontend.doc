@@ -1,11 +1,3 @@
-//
-// src/App.tsx import React from "react"; import { BrowserRouter as Router, Routes, Route } from "react-router-dom"; import Dashboard from "./components/Dashboard"; import Login from "./components/Login"; import Register from "./components/Register"; import TicketDetails from "./components/TicketDetails"; import CreateTicket from "./components/CreateTicket"; import NotFound from "./components/NotFound";
-
-function App() { return ( <Router> <Routes> <Route path="/" element={<Login />} /> <Route path="/register" element={<Register />} /> <Route path="/dashboard" element={<Dashboard />} /> <Route path="/ticket/:ticketId" element={<TicketDetails />} /> <Route path="/create-ticket" element={<CreateTicket />} /> <Route path="*" element={<NotFound />} /> </Routes> </Router> ); }
-
-export default App;
-
-
 // src/App.tsx import React from "react"; import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"; import LoginPage from "./components/auth/LoginPage"; import Dashboard from "./components/dashboard/Dashboard"; import TicketList from "./components/tickets/TicketList"; import TicketDetails from "./components/tickets/TicketDetails"; import TicketForm from "./components/tickets/TicketForm"; import Notifications from "./components/notifications/Notifications";
 
 const App: React.FC = () => { return ( <Router> <Routes> <Route path="/login" element={<LoginPage />} /> <Route path="/dashboard" element={<Dashboard />}> <Route index element={<TicketList />} /> <Route path="tickets/new" element={<TicketForm />} /> <Route path="tickets/:ticketId" element={<TicketDetails />} /> <Route path="notifications" element={<Notifications />} /> </Route> <Route path="*" element={<Navigate to="/login" />} /> </Routes> </Router> ); };
@@ -69,5 +61,4 @@ useEffect(() => { axios.get("/api/notifications", { headers: { Authorization: Be
 return ( <div> <h2>Notifications</h2> <ul> {notifications.map((note: any) => ( <li key={note.notificationId}>{note.message}</li> ))} </ul> </div> ); };
 
 export default Notifications;
-
 
