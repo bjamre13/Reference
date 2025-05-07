@@ -28,15 +28,89 @@ const Dashboard: React.FC = () => { return ( <div className="p-4"> <h1 className
 
 export default Dashboard;
 
-// --- src/pages/TicketList.tsx --- import React, { useEffect, useState } from 'react'; import TicketCard from '../components/TicketCard'; import axios from 'axios'; import { useNavigate } from 'react-router-dom';
+//TicketList.tsx
 
-interface Ticket { id: number; subject: string; priority: string; status: string; createdAt: string; agentName?: string; }
+import React, { useEffect, useState } from 'react';
+import TicketCard from '../components/TicketCard';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
-const TicketList: React.FC = () => { const [tickets, setTickets] = useState<Ticket[]>([]); const navigate = useNavigate();
+interface Ticket {
+  id: number;
+  subject: string;
+  priority: string;
+  status: string;
+  createdAt: string;
+  agentName?: string;
+}
 
-useEffect(() => { const fetchTickets = async () => { const res = await axios.get('/api/tickets', { headers: { Authorization: Bearer ${localStorage.getItem('token')} } }); setTickets(res.data); }; fetchTickets(); }, []);
+const TicketList: React.FC = () => {
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [filtered, setFiltered] = useState<Ticket[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [priorityFilter, setPriorityFilter] = useState<string>('ALL');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const navigate = useNavigate();
 
-return ( <div> {tickets.map(ticket => ( <TicketCard key={ticket.id} ticket={{ ...ticket, onClick: () => navigate(/tickets/${ticket.id}) }} /> ))} </div> ); };
+  useEffect(() => {
+    const fetchTickets = async () => {
+      const res = await axios.get('/api/tickets', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      setTickets(res.data);
+    };
+    fetchTickets();
+  }, []);
+
+  useEffect(() => {
+    let result = [...tickets];
+
+    if (statusFilter !== 'ALL') {
+      result = result.filter(t => t.status === statusFilter);
+    }
+
+    if (priorityFilter !== 'ALL') {
+      result = result.filter(t => t.priority === priorityFilter);
+    }
+
+    result.sort((a, b) => {
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+    });
+
+    setFiltered(result);
+  }, [tickets, statusFilter, priorityFilter, sortOrder]);
+
+  return (
+    <div>
+      <div className="flex gap-4 mb-4">
+        <select className="border p-2" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+          <option value="ALL">All Statuses</option>
+          <option value="OPEN">OPEN</option>
+          <option value="CLOSED">CLOSED</option>
+          <option value="IN_PROGRESS">IN_PROGRESS</option>
+        </select>
+
+        <select className="border p-2" value={priorityFilter} onChange={e => setPriorityFilter(e.target.value)}>
+          <option value="ALL">All Priorities</option>
+          <option value="LOW">LOW</option>
+          <option value="MEDIUM">MEDIUM</option>
+          <option value="HIGH">HIGH</option>
+          <option value="URGENT">URGENT</option>
+        </select>
+
+        <button className="bg-gray-200 px-4 py-2" onClick={() => setSortOrder(order => order === 'asc' ? 'desc' : 'asc')}>
+          Sort by Date: {sortOrder.toUpperCase()}
+        </button>
+      </div>
+
+      {filtered.map(ticket => (
+        <TicketCard key={ticket.id} ticket={{ ...ticket, onClick: () => navigate(`/tickets/${ticket.id}`) }} />
+      ))}
+    </div>
+  );
+};
 
 export default TicketList;
 
