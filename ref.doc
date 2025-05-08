@@ -29,6 +29,11 @@ As a support agent, I want to set ticket reminders so that I can follow up on is
 
 As a user, I want to access the system on my mobile device so that I can manage tickets while away from my desk
 
+Give me a full fledged front-end code for the above software requirement specifications in react and typescript. The websit 
+should be a formal and appealing and the version of npm should be 10.9.2. node 23.9.0 and tsc- 5.8.3 and maintain the version 
+compatibility.
+
+
 
 //Lombok
 
